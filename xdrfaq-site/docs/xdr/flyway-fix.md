@@ -1,12 +1,4 @@
----
-title: Flyway schema_version 初始化失败
-tags: [#XDR, #MySQL, #k8s, #reference]
-created: 2026-04-15
-type: permanent
-summary: 初始安装时 xdr、patrol、mirror 服务启动失败，Flyway 迁移校验不通过，需手动将三个库的 schema 表中 success=0 改为 1。
----
-
-# XDR 数据库迁移失败修复
+﻿# XDR 数据库迁移失败修复
 
 ## 故障现象
 
@@ -84,3 +76,4 @@ kubectl get pods -n ailpha-xdr -w
 - 操作前建议先 `SELECT * FROM 表名 WHERE success = 0;` 确认受影响行数
 - 三个库都要改，缺一不可
 - 修复后无需手动重启 pod，Kubernetes 会自动重试
+
