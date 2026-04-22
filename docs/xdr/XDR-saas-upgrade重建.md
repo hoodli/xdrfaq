@@ -1,6 +1,6 @@
 ---
 title: AXDR saas-upgrade Pod 重建
-tags: [#XDR, #k8s, #reference]
+tags: [XDR, k8s, reference]
 created: 2026-04-22
 type: permanent
 summary: 通过 helm upgrade 从本地 chart 包重建 saas-upgrade Pod，适用于 saas-upgrade pod 异常或需要重新初始化ailpha-xdr 组件的场景。

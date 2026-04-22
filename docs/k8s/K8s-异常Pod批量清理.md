@@ -1,6 +1,6 @@
 ---
 title: Kubernetes 异常 Pod 批量清理
-tags: [#k8s, #Linux, #reference]
+tags: [k8s, Linux, reference]
 created: 2026-04-22
 type: permanent
 summary: 一行命令批量清理 K8s 集群中 Error、ContainerStatusUnknown、Completed、Terminating 状态的异常 Pod。
