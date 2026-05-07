@@ -23,7 +23,9 @@ jobs:
         with:
           python-version: '3.12'
 
-      - run: pip install mkdocs mkdocs-material
+      - run: pip install -r requirements.txt
+
+      - run: python scripts/sync_notes.py
 
       - run: mkdocs build --site-dir _site
 

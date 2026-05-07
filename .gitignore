@@ -1,3 +1,5 @@
 ﻿.consolidate-state.json
 .openclaw/
 task-summary_*.md
+docs/*
+!docs/index.md
