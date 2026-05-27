@@ -12,7 +12,7 @@ set -euo pipefail
 DST_ROOT="${DST_ROOT:-/data/local_path/k8s_data}"
 SRC_ROOT="${SRC_ROOT:-/data/local_path_backup/k8s_data}"
 DRY_RUN="${DRY_RUN:-0}"
-RSYNC_DELETE="${RSYNC_DELETE:-0}"
+SYNC_DELETE="${SYNC_DELETE:-0}"
 
 log()  { printf '[%s] %s\n' "$(date '+%H:%M:%S')" "$*"; }
 warn() { printf '[%s] WARN: %s\n' "$(date '+%H:%M:%S')" "$*" >&2; }
@@ -84,24 +84,48 @@ index_directories() {
   done
 }
 
+# 删除目标中存在、源中不存在的路径（需 SYNC_DELETE=1）
+delete_extra_in_dst() {
+  local src_dir="$1"
+  local dst_dir="$2"
+  local file rel
+
+  while IFS= read -r -d '' file; do
+    rel="${file#"$dst_dir"/}"
+    rel="${rel#/}"
+    [[ -z "$rel" ]] && continue
+    if [[ ! -e "$src_dir/$rel" ]]; then
+      log "  删除多余: $rel"
+      rm -rf "$file"
+    fi
+  done < <(find "$dst_dir" -depth -print0)
+}
+
+# 使用 cp -a 同步（不依赖 rsync）
 sync_pair() {
   local src_dir="$1"
   local dst_dir="$2"
   local suffix="$3"
+  local file_count
 
   log "同步 [$suffix]"
   log "  源: $src_dir"
   log "  目标: $dst_dir"
 
-  local -a rsync_opts=(-aH --info=stats2,progress2)
-  [[ "$RSYNC_DELETE" == "1" ]] && rsync_opts+=(--delete)
+  file_count="$(find "$src_dir" -type f 2>/dev/null | wc -l | tr -d ' ')"
 
   if [[ "$DRY_RUN" == "1" ]]; then
-    log "[DRY_RUN] rsync ${rsync_opts[*]} \"$src_dir/\" \"$dst_dir/\""
+    log "[DRY_RUN] cp -a \"$src_dir/.\" \"$dst_dir/\" (源约 ${file_count} 个文件)"
+    [[ "$SYNC_DELETE" == "1" ]] && log "[DRY_RUN] 并删除目标中源不存在的文件"
     return 0
   fi
 
-  rsync "${rsync_opts[@]}" "$src_dir/" "$dst_dir/"
+  if [[ "$SYNC_DELETE" == "1" ]]; then
+    delete_extra_in_dst "$src_dir" "$dst_dir"
+  fi
+
+  cp -a "$src_dir/." "$dst_dir/"
+  log "  已复制约 ${file_count} 个文件"
 }
 
 verify_md5_pair() {
@@ -164,7 +188,7 @@ main() {
   log "  源: $SRC_ROOT"
   log "  目标: $DST_ROOT"
   [[ "$DRY_RUN" == "1" ]] && log "  模式: DRY_RUN（不实际写入）"
-  [[ "$RSYNC_DELETE" == "1" ]] && log "  rsync --delete 已启用"
+  [[ "$SYNC_DELETE" == "1" ]] && log "  SYNC_DELETE 已启用（删除目标中源没有的文件）"
 
   cleanup_dst_top_level
 
